@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WordSpring</string>
+    <string name="book_starter_name">WordSpring Starter 1200</string>
+
+    <!-- Common -->
+    <string name="common_retry">重试</string>
+    <string name="common_back">返回</string>
+    <string name="common_continue">继续</string>
+    <string name="common_cancel">取消</string>
+    <string name="common_confirm">确认</string>
+    <string name="common_close">关闭</string>
+    <string name="common_save">保存</string>
+    <string name="common_delete">删除</string>
+    <string name="common_import">导入</string>
+    <string name="common_export">导出</string>
+
+    <!-- Error states -->
+    <string name="error_generic_title">出了点问题</string>
+    <string name="error_generic_message">请稍后重试，或返回上一页。</string>
+    <string name="error_load_failed">加载失败，请重试。</string>
+    <string name="error_save_failed_retry">保存失败，请重试。</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_goal_title">你想用 WordSpring 做什么？</string>
+    <string name="onboarding_goal_exam">备考复习</string>
+    <string name="onboarding_goal_daily">日常积累</string>
+    <string name="onboarding_goal_custom">自定义词集</string>
+    <string name="onboarding_book_title">选择一本词书开始</string>
+    <string name="onboarding_book_subtitle">可随时在“词书”里启用更多</string>
+    <string name="onboarding_daily_title">每天学多少新词？</string>
+    <string name="onboarding_daily_subtitle">节奏由你决定，可随时调整</string>
+    <string name="onboarding_daily_10">10 个新词 / 天</string>
+    <string name="onboarding_daily_20">20 个新词 / 天</string>
+    <string name="onboarding_daily_30">30 个新词 / 天</string>
+    <string name="onboarding_daily_custom">自定义（1–100）</string>
+    <string name="onboarding_skip">跳过</string>
+    <string name="onboarding_start">开始学习</string>
+
+    <!-- Home -->
+    <string name="home_start_review">开始今日复习</string>
+    <string name="home_due_label">待复习</string>
+    <string name="home_new_label">新词</string>
+    <string name="home_eta_suffix">约 %1$d 分钟</string>
+    <string name="home_streak_suffix">已连续学习 %1$d 天</string>
+    <string name="home_all_done_title">今天的复习已完成</string>
+    <string name="home_all_done_message">坚持得不错。明天再来巩固，或预习一些新词。</string>
+    <string name="home_preview_new">预习新词</string>
+    <string name="home_empty_title">欢迎来到 WordSpring</string>
+    <string name="home_empty_message">先选一本词书，建立你的每日复习节奏。</string>
+    <string name="home_nav_home">首页</string>
+    <string name="home_nav_books">词书</string>
+    <string name="home_nav_search">搜索</string>
+    <string name="home_nav_stats">统计</string>
+    <string name="home_nav_settings">设置</string>
+
+    <!-- Study -->
+    <string name="study_progress_format">%1$d / %2$d</string>
+    <string name="study_eta_format">约 %1$d 分钟</string>
+    <string name="study_type_recall">词义回忆</string>
+    <string name="study_type_spelling">拼写</string>
+    <string name="study_type_choice">选择题</string>
+    <string name="study_recall_hint">请先在心里回忆含义</string>
+    <string name="study_show_answer">显示答案</string>
+    <string name="study_grade_again">忘记</string>
+    <string name="study_grade_hard">模糊</string>
+    <string name="study_grade_good">记得</string>
+    <string name="study_grade_easy">熟练</string>
+    <string name="study_submit">提交</string>
+    <string name="study_continue">继续</string>
+    <string name="study_play_pronunciation">发音</string>
+    <string name="study_pronunciation_unavailable">系统发音不可用</string>
+    <string name="study_correct">记住了</string>
+    <string name="study_incorrect_message">这张词会更快再出现</string>
+    <string name="study_view_example">查看例句</string>
+    <string name="study_practice_later">稍后再练</string>
+    <string name="study_saving">正在保存…</string>
+    <string name="study_exit_keep_going">继续学习</string>
+    <string name="study_exit_save_and_quit">先退出，进度已保存</string>
+    <string name="study_exit_title">要继续学习吗？</string>
+    <string name="study_spelling_hint">输入英文单词</string>
+    <string name="study_choice_hint">选择正确释义</string>
+    <string name="study_next_load_failed">下一张加载失败，请重试。</string>
+
+    <!-- Study summary -->
+    <string name="summary_title">完成得很好</string>
+    <string name="summary_completed_format">完成 %1$d 张</string>
+    <string name="summary_accuracy_format">正确率 %1$d%%</string>
+    <string name="summary_duration_format">用时 %1$d 分钟</string>
+    <string name="summary_remaining_format">剩余 %1$d 张待复习</string>
+    <string name="summary_review_mistakes">查看错词</string>
+    <string name="summary_back_home">返回首页</string>
+
+    <!-- Books -->
+    <string name="books_title">词书</string>
+    <string name="books_enabled">已启用</string>
+    <string name="books_disabled">未启用</string>
+    <string name="books_progress_format">%1$d / %2$d</string>
+    <string name="books_import_csv">导入 CSV</string>
+    <string name="books_create_custom">创建自定义词集</string>
+    <string name="books_hide">隐藏词集</string>
+    <string name="books_delete_warning_format">该词集包含 %1$d 个词条和 %2$d 条学习记录。隐藏词集可保留进度；删除将清除其学习数据，且无法撤销。</string>
+    <string name="books_delete_confirm">确认删除</string>
+    <string name="books_hide_confirm">仅隐藏</string>
+
+    <!-- Book detail -->
+    <string name="book_detail_progress">学习进度</string>
+    <string name="book_detail_license">授权</string>
+    <string name="book_detail_version">版本</string>
+    <string name="book_detail_updated">更新日期</string>
+    <string name="book_detail_source">来源</string>
+    <string name="book_detail_enable">启用此词书</string>
+    <string name="book_detail_disable">停用此词书</string>
+    <string name="book_detail_daily_limit">每日新词上限</string>
+
+    <!-- Word detail -->
+    <string name="word_favorite">收藏</string>
+    <string name="word_difficult">困难词</string>
+    <string name="word_relearn">重新学习</string>
+    <string name="word_pronounce">发音</string>
+    <string name="word_stage_new">未学习</string>
+    <string name="word_stage_learning">学习中</string>
+    <string name="word_stage_review">复习中</string>
+    <string name="word_stage_suspended">已暂停</string>
+    <string name="word_next_review">下次复习</string>
+
+    <!-- Search -->
+    <string name="search_hint">搜索单词、释义或词书</string>
+    <string name="search_empty">输入关键词开始搜索</string>
+    <string name="search_no_result">没有匹配结果</string>
+
+    <!-- Mistakes -->
+    <string name="mistakes_title">错词本</string>
+    <string name="mistakes_subtitle">近 30 天内答错过的词</string>
+    <string name="mistakes_empty">还没有错词，继续保持。</string>
+    <string name="mistakes_filter_all">全部</string>
+    <string name="mistakes_relearn">重新学习错词</string>
+
+    <!-- Stats -->
+    <string name="stats_today">今日</string>
+    <string name="stats_7d">近 7 天</string>
+    <string name="stats_30d">近 30 天</string>
+    <string name="stats_reviewed">复习量</string>
+    <string name="stats_correct_rate">正确率</string>
+    <string name="stats_new_count">新学</string>
+    <string name="stats_due_count">到期</string>
+    <string name="stats_trend">掌握趋势</string>
+    <string name="stats_streak">连续学习</string>
+    <string name="stats_empty_title">还没有学习数据</string>
+    <string name="stats_empty_message">完成第一轮复习后，这里会展示你的进步。</string>
+
+    <!-- Settings -->
+    <string name="settings_title">设置</string>
+    <string name="settings_section_study">学习</string>
+    <string name="settings_section_appearance">外观</string>
+    <string name="settings_section_audio">发音</string>
+    <string name="settings_section_reminder">提醒</string>
+    <string name="settings_section_data">数据</string>
+    <string name="settings_daily_new">每日新词</string>
+    <string name="settings_advanced_grading">高级评分（增加“熟练”）</string>
+    <string name="settings_show_answer_on_wrong">答错后自动显示答案</string>
+    <string name="settings_theme">主题</string>
+    <string name="settings_theme_system">跟随系统</string>
+    <string name="settings_theme_light">浅色</string>
+    <string name="settings_theme_dark">深色</string>
+    <string name="settings_dynamic_color">动态配色</string>
+    <string name="settings_reduce_motion">减少动效</string>
+    <string name="settings_haptic">触觉反馈</string>
+    <string name="settings_tts_speed">TTS 语速</string>
+    <string name="settings_tts_speed_slow">0.75x</string>
+    <string name="settings_tts_speed_normal">1.0x</string>
+    <string name="settings_tts_speed_fast">1.25x</string>
+    <string name="settings_reminder_enabled">学习提醒</string>
+    <string name="settings_reminder_time">提醒时间</string>
+    <string name="settings_backup">备份学习数据</string>
+    <string name="settings_restore">从备份恢复</string>
+    <string name="settings_clear_data">清除全部学习数据</string>
+    <string name="settings_clear_warning">将清除所有学习记录、卡片进度、自定义词集和备份历史。内置词书会保留。此操作不可撤销。</string>
+    <string name="settings_about">关于</string>
+    <string name="settings_about_version">版本 %1$s</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">学习提醒</string>
+    <string name="notification_channel_desc">每天提醒你完成复习</string>
+    <string name="notification_text_format">今天有 %1$d 张词卡，约需 %2$d 分钟</string>
+
+    <!-- Import / Export -->
+    <string name="import_title">导入预览</string>
+    <string name="import_valid_format">有效 %1$d 条</string>
+    <string name="import_duplicate_format">重复 %1$d 条（将合并）</string>
+    <string name="import_error_format">错误 %1$d 条</string>
+    <string name="import_confirm">确认导入</string>
+    <string name="import_cancel">取消</string>
+    <string name="import_row_error_format">第 %1$d 行：%2$s</string>
+    <string name="import_error_missing_word">缺少 word 字段</string>
+    <string name="import_error_empty">文件为空</string>
+    <string name="import_success_format">成功导入 %1$d 条</string>
+    <string name="import_failed_format">导入失败：%1$s</string>
+
+    <string name="restore_warning_title">确认恢复备份</string>
+    <string name="restore_warning_message">恢复将覆盖当前所有学习数据。建议先备份当前数据。此操作不可撤销。</string>
+    <string name="restore_invalid_schema">备份文件版本不兼容</string>
+    <string name="restore_invalid_file">备份文件无效</string>
+    <string name="restore_success">恢复成功</string>
+</resources>

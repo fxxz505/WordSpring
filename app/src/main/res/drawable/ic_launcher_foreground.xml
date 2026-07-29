@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Sprout leaf shape centered in safe zone (24-84) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,32 C44,40 40,52 44,64 C48,52 56,46 64,44 C58,48 52,56 50,66 C58,64 66,58 70,48 C70,40 64,32 54,32 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M52,40 L52,76 L56,76 L56,40 Z" />
+</vector>

@@ -1,0 +1,37 @@
+# Android and Gradle build output
+.gradle/
+.gradle-check/
+.gradle-user-home/
+.kotlin/
+**/build/
+*.apk
+*.aab
+captures/
+
+# Local Android SDK configuration and emulator/runtime state
+local.properties
+*.keystore
+*.jks
+*.hprof
+
+# Test and tool caches
+.cache/
+.robolectric-cache/
+.test-home/
+
+# IDE and OS files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local export and diagnostic output
+dist/
+*.log
+
+# Secrets and local environment overrides
+.env
+.env.*
+!.env.example
+secrets.properties

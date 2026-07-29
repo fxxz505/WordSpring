@@ -1,0 +1,13 @@
+{
+  "id": "cet6_core",
+  "name": "CET-6 Complete Vocabulary",
+  "sourceType": "BUILT_IN",
+  "dailyNewLimit": 10,
+  "license": "MIT License - ECDICT (Copyright 2025 Linwei; see LICENSE.txt)",
+  "version": "2.1.0",
+  "updatedAt": "2026-07-28",
+  "source": "ECDICT CET-6 tagged vocabulary",
+  "wordCount": 4500,
+  "sourceLanguage": "en",
+  "targetLanguage": "zh-CN"
+}
