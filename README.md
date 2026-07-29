@@ -26,7 +26,7 @@ WordSpring 是一款本地优先的 Android 背单词应用。它将单词学习
 
 当前工作区的可安装 Debug APK：
 
-- [下载 WordSpring v1.0.0 Debug APK](dist/WordSpring-v1.0.0-debug.apk)
+- [下载 WordSpring v1.0.0 Debug APK](https://github.com/fxxz505/WordSpring/releases/download/v1.0.0/WordSpring-v1.0.0-debug.apk)
 
 该文件是本地构建产物，按约定不提交到 Git；因此从 Git 仓库克隆项目后，请先按
 下面的“生成 APK”步骤重新生成。发布到 GitHub Releases、网盘或应用分发平台时，
