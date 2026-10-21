@@ -3,17 +3,17 @@
 一款为英语学习设计的离线背单词应用。用一张张可翻转、可滑动的词卡，建立自己的
 复习节奏；学习记录默认只保存在手机本地，也可以选择登录后跨设备同步。
 
-**当前版本：** 1.0.0
+**当前版本：** 1.1.0
 
 **适用系统：** Android 8.0 及以上
 
 ## 立即下载
 
-[下载 WordSpring v1.0.0 APK](https://github.com/fxxz505/WordSpring/releases/download/v1.0.0/WordSpring-v1.0.0-debug.apk)
+[下载 WordSpring v1.1.0 APK](https://github.com/fxxz505/WordSpring/releases/download/v1.1.0/WordSpring-v1.1.0-debug.apk)
 
 也可以在 [全部版本](https://github.com/fxxz505/WordSpring/releases) 页面查看更新记录。
 
-> 当前安装包为体验版（Debug 签名）。Android 首次安装时可能会显示安全提示；请
+> 当前安装包为体验版（Debug 签名，约 21 MB）。Android 首次安装时可能会显示安全提示；请
 > 确认下载来源为本项目后，按系统提示继续安装。
 
 ## 安装方法
@@ -128,6 +128,21 @@ cd server && mvn spring-boot:run -Dspring-boot.run.profiles=mysql
 模拟器通过 `http://10.0.2.2:8080/` 访问宿主机，地址配置在 `app/build.gradle.kts`
 的 `SYNC_BASE_URL`。接口说明见 [server/README.md](server/README.md)，整体设计见
 [docs/PROJECT.md](docs/PROJECT.md)。
+
+## 版本记录
+
+### v1.1.0（2026-10）
+
+- 新增**可选云同步**：登录后复习进度可在多设备间同步（服务端见 `server/`）
+- 数据库升级到 schema v4：`review_cards.version`、`review_events.synced`
+- targetSdk 34 → **36**，适配 Android 16
+- 修复 6 处 `catch (Throwable)` 吞掉协程取消异常的问题
+- 错题列表改为单条联查（去掉 N+1）；选择题干扰项改为随机偏移分页
+- 设置页新增「账号 → 云同步」入口
+
+### v1.0.0（2026-07）
+
+- 首个公开版本：8 本内置词书、滑动词卡、间隔重复调度、离线统计
 
 ## 更新应用
 
