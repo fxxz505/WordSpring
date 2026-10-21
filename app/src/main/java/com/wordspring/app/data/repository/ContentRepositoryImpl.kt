@@ -127,8 +127,14 @@ class ContentRepositoryImpl @Inject constructor(
         excludeWordId: Long,
         partOfSpeech: String?,
         limit: Int
-    ): List<Definition> =
-        definitionDao.getRandomDistractors(bookEntryId, excludeWordId, partOfSpeech, limit).map { it.toDomain() }
+    ): List<Definition> {
+        val total = definitionDao.countDistractors(bookEntryId, excludeWordId, partOfSpeech)
+        if (total <= 0) return emptyList()
+        val offset = if (total <= limit) 0 else kotlin.random.Random.nextInt(total - limit)
+        return definitionDao
+            .getRandomDistractors(bookEntryId, excludeWordId, partOfSpeech, limit, offset)
+            .map { it.toDomain() }
+    }
     override fun observeDefinitions(wordId: Long): Flow<List<Definition>> =
         definitionDao.observeByWord(wordId).map { list -> list.map { it.toDomain() } }
 

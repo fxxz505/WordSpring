@@ -74,22 +74,37 @@ interface DefinitionDao {
 
     /**
      * Random meanings of *other* words from the same book, used as multiple-choice distractors.
-     * Pass [partOfSpeech] to prefer distractors of the same part of speech (harder, fairer options).
+     * Two-step (count + offset) instead of ORDER BY RANDOM(): the sort is the expensive part on
+     * a few-thousand-row table, while this stays index-friendly and O(limit).
      */
+    @Query("""
+        SELECT COUNT(*) FROM definitions d
+        INNER JOIN book_entries be ON be.wordId = d.wordId
+        WHERE be.bookId = (SELECT bookId FROM book_entries WHERE id = :bookEntryId)
+          AND d.wordId != :excludeWordId
+          AND (:partOfSpeech IS NULL OR d.partOfSpeech = :partOfSpeech)
+    """)
+    suspend fun countDistractors(
+        bookEntryId: Long,
+        excludeWordId: Long,
+        partOfSpeech: String?
+    ): Int
+
     @Query("""
         SELECT d.* FROM definitions d
         INNER JOIN book_entries be ON be.wordId = d.wordId
         WHERE be.bookId = (SELECT bookId FROM book_entries WHERE id = :bookEntryId)
           AND d.wordId != :excludeWordId
           AND (:partOfSpeech IS NULL OR d.partOfSpeech = :partOfSpeech)
-        ORDER BY RANDOM()
-        LIMIT :limit
+        ORDER BY d.id
+        LIMIT :limit OFFSET :offset
     """)
     suspend fun getRandomDistractors(
         bookEntryId: Long,
         excludeWordId: Long,
         partOfSpeech: String?,
-        limit: Int
+        limit: Int,
+        offset: Int
     ): List<DefinitionEntity>
 }
 
@@ -238,6 +253,17 @@ data class BookLearningProgressRow(
     val newCount: Int
 )
 
+/** Flat projection for the mistake list (one row per card, no per-row lookups). */
+data class MistakeRow(
+    val cardId: Long,
+    val bookEntryId: Long,
+    val wordId: Long,
+    val bookId: Long,
+    val lastWrongAt: Long,
+    val spelling: String,
+    val meaningZh: String?
+)
+
 @Dao
 interface ReviewEventDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun insert(event: ReviewEventEntity): Long
@@ -253,6 +279,43 @@ interface ReviewEventDao {
         GROUP BY cardId
     """)
     suspend fun getMistakeCardIds(since: Long): List<Long>
+
+    /**
+     * Mistake list in a single query. The previous implementation issued four lookups per card
+     * (event, card, entry, word, definitions) which is N+1 across five tables.
+     */
+    @Query("""
+        SELECT rc.id AS cardId, rc.bookEntryId AS bookEntryId, be.wordId AS wordId,
+               be.bookId AS bookId, MAX(re.answeredAt) AS lastWrongAt,
+               w.spelling AS spelling,
+               (SELECT d.meaningZh FROM definitions d
+                WHERE d.wordId = be.wordId ORDER BY d.id LIMIT 1) AS meaningZh
+        FROM review_events re
+        INNER JOIN review_cards rc ON rc.id = re.cardId
+        INNER JOIN book_entries be ON be.id = rc.bookEntryId
+        INNER JOIN words w ON w.id = be.wordId
+        WHERE re.grade = 'AGAIN' AND re.answeredAt >= :since
+          AND be.bookId IN (:bookIds)
+        GROUP BY rc.id
+        ORDER BY lastWrongAt DESC
+    """)
+    suspend fun getMistakeRows(since: Long, bookIds: List<Long>): List<MistakeRow>
+
+    @Query("""
+        SELECT rc.id AS cardId, rc.bookEntryId AS bookEntryId, be.wordId AS wordId,
+               be.bookId AS bookId, MAX(re.answeredAt) AS lastWrongAt,
+               w.spelling AS spelling,
+               (SELECT d.meaningZh FROM definitions d
+                WHERE d.wordId = be.wordId ORDER BY d.id LIMIT 1) AS meaningZh
+        FROM review_events re
+        INNER JOIN review_cards rc ON rc.id = re.cardId
+        INNER JOIN book_entries be ON be.id = rc.bookEntryId
+        INNER JOIN words w ON w.id = be.wordId
+        WHERE re.grade = 'AGAIN' AND re.answeredAt >= :since
+        GROUP BY rc.id
+        ORDER BY lastWrongAt DESC
+    """)
+    suspend fun getMistakeRowsAll(since: Long): List<MistakeRow>
     @Query("""
         SELECT cardId FROM review_events
         WHERE grade = 'AGAIN' AND answeredAt >= :since

@@ -180,35 +180,23 @@ class ReviewRepositoryImpl @Inject constructor(
         reviewEventDao.observeMistakeCardIds(since)
 
     override suspend fun getMistakeCards(since: Long, bookIds: List<Long>): List<MistakeCard> {
-        val cardIds = reviewEventDao.getMistakeCardIds(since)
-        if (cardIds.isEmpty()) return emptyList()
-        val result = ArrayList<MistakeCard>(cardIds.size)
-        val recentByCard = HashMap<Long, Long>()
-        for (id in cardIds) {
-            val events = reviewEventDao.getForCard(id, 1)
-            if (events.isNotEmpty()) {
-                recentByCard[id] = events.first().answeredAt
-            }
+        // One query instead of per-card lookups across events/cards/entries/words/definitions.
+        val rows = if (bookIds.isEmpty()) {
+            reviewEventDao.getMistakeRowsAll(since)
+        } else {
+            reviewEventDao.getMistakeRows(since, bookIds)
         }
-        for (cardId in cardIds) {
-            val card = reviewCardDao.getById(cardId) ?: continue
-            val entry = bookEntryDao.getById(card.bookEntryId) ?: continue
-            if (bookIds.isNotEmpty() && entry.bookId !in bookIds) continue
-            // Fetch word spelling and primary definition for display.
-            val word = wordDao.getById(entry.wordId)
-            val definitions = definitionDao.getByWord(entry.wordId)
-            val primaryMeaning = definitions.firstOrNull()?.meaningZh
-            result += MistakeCard(
-                cardId = cardId,
-                bookEntryId = card.bookEntryId,
-                wordId = entry.wordId,
-                bookId = entry.bookId,
-                lastWrongAt = recentByCard[cardId] ?: since,
-                spelling = word?.spelling ?: "",
-                meaningZh = primaryMeaning
+        return rows.map {
+            MistakeCard(
+                cardId = it.cardId,
+                bookEntryId = it.bookEntryId,
+                wordId = it.wordId,
+                bookId = it.bookId,
+                lastWrongAt = it.lastWrongAt,
+                spelling = it.spelling,
+                meaningZh = it.meaningZh
             )
         }
-        return result
     }
 
     override suspend fun suspendCard(cardId: Long) {
