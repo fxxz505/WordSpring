@@ -1,0 +1,37 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: wordsprint-server
+
+  # Default profile: in-memory H2 in MySQL compatibility mode.
+  # Run with --spring.profiles.active=mysql to use a real MySQL instance.
+  datasource:
+    url: jdbc:h2:mem:wordspring;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+app:
+  jwt:
+    # Override in production: JWT_SECRET must be at least 32 bytes.
+    secret: ${JWT_SECRET:wordspring-dev-secret-please-change-me-32b}
+    ttl-minutes: 10080
+
+logging:
+  level:
+    org.flywaydb: info

@@ -35,3 +35,7 @@ dist/
 .env.*
 !.env.example
 secrets.properties
+
+# Maven build output
+target/
+
