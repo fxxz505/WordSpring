@@ -69,6 +69,7 @@ import kotlinx.coroutines.withContext
 fun SettingsScreen(
     contentPadding: PaddingValues,
     onBack: () -> Unit,
+    onOpenSync: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -157,6 +158,14 @@ fun SettingsScreen(
             Spacer(Modifier.height(8.dp))
 
             // ---------- 学习 ----------
+            // ---------- 账号 ----------
+            SectionHeader("账号")
+            SettingsRow(title = "云同步", subtitle = "可选；登录后多设备共享进度") {
+                TextButton(onClick = onOpenSync) { Text("管理") }
+            }
+
+            HorizontalDivider()
+
             SectionHeader("学习")
             ToggleRow(
                 title = "高级评分（增加“熟练”）",

@@ -106,19 +106,21 @@ public class SyncService {
             card.apply(snapshot.bookUid(), snapshot.stage(), snapshot.dueAt(),
                     snapshot.intervalDays(), snapshot.ease(), snapshot.step(),
                     now, snapshot.deleted());
-            card.setVersion(1);
+            card.setVersion(snapshot.version());
             cards.save(card);
             return null;
         }
 
-        if (card.getVersion() != snapshot.version()) {
+        if (snapshot.version() < card.getVersion()) {
             return new Conflict(snapshot.cardUid(), toSnapshot(card));
         }
 
+        // The client version acts as a logical clock: accept equal or newer writes and
+        // store the client's value, so both sides converge without an extra round trip.
         card.apply(snapshot.bookUid(), snapshot.stage(), snapshot.dueAt(),
                 snapshot.intervalDays(), snapshot.ease(), snapshot.step(),
                 now, snapshot.deleted());
-        card.setVersion(card.getVersion() + 1);
+        card.setVersion(snapshot.version());
         cards.save(card);
         return null;
     }

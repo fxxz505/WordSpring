@@ -1,7 +1,7 @@
 # WordSpring
 
 一款为英语学习设计的离线背单词应用。用一张张可翻转、可滑动的词卡，建立自己的
-复习节奏；学习记录保留在手机本地，无需注册账号。
+复习节奏；学习记录默认只保存在手机本地，也可以选择登录后跨设备同步。
 
 **当前版本：** 1.0.0
 
@@ -94,10 +94,40 @@
 
 ## 数据与隐私
 
-- 学习记录、进度和自定义词书默认只保存在手机本地。
-- 不需要账号，也不会自动将学习数据上传到云端。
+- 学习记录、进度和自定义词书默认只保存在手机本地，**不登录就完全不联网**。
+- 云同步是可选功能：在「设置 → 账号 → 云同步」登录后，才会把复习卡片状态和答题
+  事件上传到服务端；词书内容不会上传。
 - 可在“设置”中主动备份学习数据，或从备份恢复。
-- 卸载应用会清除本地学习数据；重要进度请先完成备份。
+- 卸载应用会清除本地学习数据；重要进度请先完成备份或开启同步。
+
+## 云同步（可选）
+
+仓库包含一个 Spring Boot 服务端（`server/`），用于多设备同步：
+
+| 组件 | 技术 |
+| --- | --- |
+| 客户端 | Kotlin 2.0 · Compose · Room · Hilt · Coroutines · WorkManager |
+| 同步 | Retrofit · kotlinx.serialization · JWT |
+| 服务端 | Spring Boot 4.1 · JPA · Flyway · MySQL 8（开发用 H2） |
+
+三个设计要点：
+
+- **服务端不实现复习算法**，只存答题事件与卡片快照，避免客户端/服务端两份实现打架；
+- **`answerId` 唯一索引**保证重复推送幂等，断网重试不会重复计数；
+- **卡片带版本号**，落后版本的写入会被拒绝并返回服务端状态，由客户端合并后重推。
+
+本地启动：
+
+```bash
+cd server && mvn spring-boot:run                    # H2，无需安装 MySQL
+# 或
+docker compose up -d mysql
+cd server && mvn spring-boot:run -Dspring-boot.run.profiles=mysql
+```
+
+模拟器通过 `http://10.0.2.2:8080/` 访问宿主机，地址配置在 `app/build.gradle.kts`
+的 `SYNC_BASE_URL`。接口说明见 [server/README.md](server/README.md)，整体设计见
+[docs/PROJECT.md](docs/PROJECT.md)。
 
 ## 更新应用
 

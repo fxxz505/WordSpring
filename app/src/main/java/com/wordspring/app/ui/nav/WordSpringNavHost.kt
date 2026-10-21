@@ -43,6 +43,7 @@ import com.wordspring.app.feature.mistakes.MistakesScreen
 import com.wordspring.app.feature.onboarding.OnboardingScreen
 import com.wordspring.app.feature.search.SearchScreen
 import com.wordspring.app.feature.settings.SettingsScreen
+import com.wordspring.app.feature.sync.SyncScreen
 import com.wordspring.app.feature.stats.StatsScreen
 import com.wordspring.app.feature.study.StudyScreen
 import com.wordspring.app.feature.study.summary.StudySummaryScreen
@@ -205,6 +206,13 @@ fun WordSpringNavHost() {
             }
             composable(Routes.SETTINGS) {
                 SettingsScreen(
+                    contentPadding = innerPadding,
+                    onBack = { navController.popBackStack() },
+                    onOpenSync = { navController.navigate(Routes.SYNC) }
+                )
+            }
+            composable(Routes.SYNC) {
+                SyncScreen(
                     contentPadding = innerPadding,
                     onBack = { navController.popBackStack() }
                 )

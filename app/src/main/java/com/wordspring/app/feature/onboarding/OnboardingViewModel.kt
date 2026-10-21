@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 enum class OnboardingGoal { EXAM, DAILY, CUSTOM }
 enum class OnboardingStep { GOAL, BOOK, DAILY }
@@ -60,6 +61,7 @@ class OnboardingViewModel @Inject constructor(
                     selectedBookId = _state.value.selectedBookId ?: preselected
                 )
             } catch (t: Throwable) {
+                if (t is CancellationException) throw t
                 _state.value = _state.value.copy(isLoading = false, errorMessage = "初始化失败，请重试")
             }
         }

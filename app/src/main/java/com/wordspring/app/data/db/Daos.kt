@@ -207,6 +207,27 @@ interface ReviewCardDao {
         WHERE be.bookId = :bookId
     """)
     suspend fun getByBook(bookId: Long): List<ReviewCardEntity>
+
+    @Query("SELECT * FROM review_cards WHERE bookEntryId IN (:bookEntryIds)")
+    suspend fun getByBookEntryIds(bookEntryIds: List<Long>): List<ReviewCardEntity>
+
+    /** Applies a card snapshot pulled from the sync backend (server wins on conflict). */
+    @Query("""
+        UPDATE review_cards
+        SET stage = :stage, dueAt = :dueAt, intervalDays = :intervalDays,
+            ease = :ease, step = :step, updatedAt = :updatedAt, version = :version
+        WHERE bookEntryId = :bookEntryId
+    """)
+    suspend fun applyServerCard(
+        bookEntryId: Long,
+        stage: String,
+        dueAt: Long,
+        intervalDays: Double,
+        ease: Double,
+        step: Int,
+        updatedAt: Long,
+        version: Long
+    )
 }
 
 data class BookLearningProgressRow(
@@ -281,6 +302,15 @@ interface ReviewEventDao {
     suspend fun countCorrectSince(since: Long): Int
     @Query("SELECT * FROM review_events ORDER BY answeredAt DESC")
     suspend fun getAll(): List<ReviewEventEntity>
+
+    @Query("SELECT * FROM review_events WHERE synced = 0 ORDER BY answeredAt ASC LIMIT :limit")
+    suspend fun getUnsynced(limit: Int): List<ReviewEventEntity>
+
+    @Query("SELECT COUNT(*) FROM review_events WHERE synced = 0")
+    suspend fun countUnsynced(): Int
+
+    @Query("UPDATE review_events SET synced = 1 WHERE answerId IN (:answerIds)")
+    suspend fun markSynced(answerIds: List<String>)
     @Query("UPDATE review_events SET cardId = :newCardId WHERE cardId = :oldCardId")
     suspend fun reassignCard(oldCardId: Long, newCardId: Long)
     @Query("DELETE FROM review_events") suspend fun deleteAll()

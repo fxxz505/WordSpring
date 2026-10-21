@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 data class ImportCsvUiState(
     val isLoading: Boolean = false,
@@ -57,6 +58,7 @@ class ImportCsvViewModel @Inject constructor(
                     successMessage = "成功导入 ${parsed.validCount} 条"
                 )
             } catch (t: Throwable) {
+                if (t is CancellationException) throw t
                 _state.value = _state.value.copy(
                     isCommitting = false,
                     errorMessage = "导入失败：${t.message}"

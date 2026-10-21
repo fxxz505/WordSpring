@@ -85,7 +85,9 @@ data class ReviewCardEntity(
     val intervalDays: Double,
     val ease: Double,
     val step: Int,
-    val updatedAt: Long
+    val updatedAt: Long,
+    /** Monotonic version used by cloud sync for optimistic concurrency. */
+    val version: Long = 0L
 )
 
 @Entity(
@@ -102,7 +104,9 @@ data class ReviewEventEntity(
     val grade: String, // Grade.name()
     val questionType: String, // QuestionType.name()
     val answeredAt: Long,
-    val durationMs: Long
+    val durationMs: Long,
+    /** False until the event has been accepted by the sync backend. */
+    val synced: Boolean = false
 )
 
 @Entity(

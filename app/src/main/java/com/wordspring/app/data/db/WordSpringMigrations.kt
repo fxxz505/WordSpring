@@ -44,12 +44,25 @@ object WordSpringMigrations {
         }
     }
 
+    /**
+     * v4: cloud sync bookkeeping.
+     *  - review_cards.version enables optimistic concurrency against the sync backend.
+     *  - review_events.synced marks answers already accepted by the server (idempotent push).
+     */
+    val MIGRATION_3_4: Migration = object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE review_cards ADD COLUMN version INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE review_events ADD COLUMN synced INTEGER NOT NULL DEFAULT 0")
+        }
+    }
+
     val ALL: Array<Migration> = arrayOf(
         object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE word_books ADD COLUMN targetEpochDay INTEGER")
             }
         },
-        MIGRATION_2_3
+        MIGRATION_2_3,
+        MIGRATION_3_4
     )
 }

@@ -28,7 +28,7 @@
 │      │                                                                     │
 │  data/         Repository ── Room（10 张表）  DataStore  CSV/JSON 导入导出   │
 │      │                                                                     │
-│  sync/         SyncClient ── Retrofit ── HTTPS ──┐   （见第 8 节，接线中）   │
+│  sync/         SyncClient ── Retrofit ── HTTPS ──┐   （可选，登录后启用）           │
 └───────────────────────────────────────────────────┼────────────────────────┘
                                                     │ JWT
 ┌──────────────────────── Spring Boot 4 ────────────▼────────────────────────┐
@@ -188,12 +188,14 @@ daily_summaries(id, user_id, local_date, reviewed_count, new_count,
 
 - **幂等**：`answerId` 由客户端生成（UUID），重推不会重复计数。
 - **增量**：`pull` 用 `updated_at > since` 的游标，只传变化。
-- **冲突**：`version` 不匹配 → 返回 `conflicts`，客户端以服务端为准合并后重推。
+- **版本即逻辑时钟**：客户端每次答题把本地 `review_cards.version` 加一；推送时带上该值。
+  服务端只有在 `snapshot.version >= server.version` 时才接受，否则返回 `conflicts`。
 - **统计**：服务端从事件重算（distinct 卡片数 / 当日首次出现 / 非 AGAIN 数），
   所以重试安全。
 
-**当前状态**：服务端 API 已完成并有 13 个测试；客户端 `sync/` 包（Retrofit 客户端 +
-同步队列 + 设置页入口）尚未接线，是下一步工作。
+**实现位置**：客户端 `com.wordspring.app.sync`（`SyncRepository` / `SyncStore` /
+`WordSpringApi` / `SyncWorker`），UI 入口在「设置 → 账号 → 云同步」；后台每 6 小时
+在联网时尝试一次，未登录直接跳过。
 
 ---
 
@@ -242,12 +244,12 @@ cd server && mvn test
 
 ## 12. 已知限制与演进
 
-1. **客户端同步未接线**（第 8 节）——下一步。
-2. `pull` 的游标是毫秒时间戳，同毫秒写入可能漏拉；改为单调 `change_seq` 更稳。
-3. 词书随包发布，更新需要发版；后续可做「词书增量下发 + 版本号」。
-4. 没有 refresh token，JWT 过期需重新登录。
-5. 服务端无速率限制与账号锁定。
-6. targetSdk 仍是 34，上架前需升到 36。
+1. `pull` 的游标是毫秒时间戳，同毫秒写入可能漏拉；改为单调 `change_seq` 更稳。
+2. 词书随包发布，更新需要发版；后续可做「词书增量下发 + 版本号」。
+3. 没有 refresh token，JWT 过期需重新登录。
+4. 服务端无速率限制与账号锁定。
+5. 冲突策略是「版本新者胜」，没有字段级合并；同一张卡在两端同时作答会丢一次。
+6. 服务端未做账号注销与数据导出（合规要求，上架前必须补）。
 
 ---
 

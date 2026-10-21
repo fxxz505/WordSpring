@@ -25,6 +25,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * JSON backup / restore (M09). Spec rules:
@@ -121,6 +122,7 @@ class JsonBackup @Inject constructor(
             }
             null
         } catch (t: Throwable) {
+            if (t is CancellationException) throw t
             "备份文件无效：${t.message}"
         }
     }
@@ -135,6 +137,7 @@ class JsonBackup @Inject constructor(
         val backup = try {
             json.decodeFromString(Backup.serializer(), content)
         } catch (t: Throwable) {
+            if (t is CancellationException) throw t
             return@withContext Result.failure(t)
         }
         if (backup.schemaVersion != SCHEMA_VERSION) {

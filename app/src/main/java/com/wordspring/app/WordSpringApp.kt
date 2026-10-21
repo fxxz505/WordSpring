@@ -6,8 +6,15 @@ import android.app.NotificationManager
 import android.os.Build
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.wordspring.app.domain.tts.TtsController
+import com.wordspring.app.sync.SyncWorker
 import dagger.hilt.android.HiltAndroidApp
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -25,6 +32,26 @@ class WordSpringApp : Application(), Configuration.Provider {
         super.onCreate()
         createNotificationChannel()
         ttsController.ensureInitialized()
+        scheduleCloudSync()
+    }
+
+    /**
+     * Background sync is a no-op until the user signs in: the worker calls syncNow(), which
+     * returns a failure immediately when there is no session.
+     */
+    private fun scheduleCloudSync() {
+        val request = PeriodicWorkRequestBuilder<SyncWorker>(6, TimeUnit.HOURS)
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+            )
+            .build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            SyncWorker.UNIQUE_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            request
+        )
     }
 
     private fun createNotificationChannel() {

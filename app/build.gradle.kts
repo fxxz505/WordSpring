@@ -9,17 +9,20 @@ plugins {
 
 android {
     namespace = "com.wordspring.app"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.wordspring.app"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
 
         testInstrumentationRunner = "com.wordspring.app.HiltTestRunner"
         vectorDrawables { useSupportLibrary = true }
+
+        // Sync backend base URL. 10.0.2.2 reaches the host machine from the emulator.
+        buildConfigField("String", "SYNC_BASE_URL", "\"http://10.0.2.2:8080/\"")
 
         // Room schema export for migration tests
         ksp { arg("room.schemaLocation", "$projectDir/schemas") }
@@ -132,6 +135,10 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
+
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.kotlinx.serialization)
+    implementation(libs.okhttp.logging)
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 sealed interface HomeUiState {
     data object Loading : HomeUiState
@@ -120,6 +121,7 @@ class HomeViewModel @Inject constructor(
                 startEnabled = metrics.startEnabled
             )
         } catch (t: Throwable) {
+            if (t is CancellationException) throw t
             HomeUiState.Failed("加载今日任务失败，请重试")
         }
     }

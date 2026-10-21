@@ -21,6 +21,7 @@ import com.wordspring.app.domain.model.Stage
 import com.wordspring.app.domain.scheduler.Scheduler
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlin.coroutines.cancellation.CancellationException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -109,9 +110,11 @@ class ReviewRepositoryImpl @Inject constructor(
                 val newEventId = reviewEventDao.insert(event.toEntity())
                 val savedEvent = event.copy(id = newEventId)
 
-                // 3. Update card
+                // 3. Update card (bump the sync version so other devices can detect staleness)
                 val updatedCard = nextCard.copy(id = currentCard.id, updatedAt = command.now)
-                reviewCardDao.update(updatedCard.toEntity())
+                reviewCardDao.update(
+                    updatedCard.toEntity().copy(version = currentCardEntity.version + 1)
+                )
 
                 // 4. Update daily summary (idempotent at day level because answerId dedups events)
                 val today = TimeUtil.localDateString(command.now)
@@ -160,6 +163,9 @@ class ReviewRepositoryImpl @Inject constructor(
                 AnswerResult.Committed(event = savedEvent, newCard = updatedCard)
             }
         } catch (t: Throwable) {
+            // Cancellation must propagate: swallowing it leaves the caller thinking the write
+            // succeeded and breaks structured concurrency.
+            if (t is CancellationException) throw t
             AnswerResult.Failed(t.message ?: "保存失败")
         }
     }

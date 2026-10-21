@@ -24,6 +24,7 @@ object Routes {
     const val MISTAKES = "mistakes"
     const val STATS = "stats"
     const val SETTINGS = "settings"
+    const val SYNC = "sync"
 
     const val IMPORT_CSV = "import-csv/{bookId}"
     fun importCsv(bookId: Long) = "import-csv/$bookId"

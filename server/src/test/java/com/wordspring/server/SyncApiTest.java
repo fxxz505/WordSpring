@@ -52,16 +52,16 @@ class SyncApiTest extends ApiTestSupport {
     @Test
     void staleCardVersionIsReportedAsConflict() {
         String token = registerAndGetToken(uniqueEmail());
-        push(token, event("answer-1", "card-1", 0));
+        push(token, event("answer-1", "card-1", 2));
 
-        // The client still believes the card is at version 0, but the server is at 1.
-        Response stale = push(token, event("answer-2", "card-1", 0));
+        // A client that has not seen version 2 yet tries to write version 1.
+        Response stale = push(token, event("answer-2", "card-1", 1));
 
         assertThat(stale.status()).isEqualTo(200);
         assertThat(stale.integer("accepted")).isEqualTo(1);
         assertThat(stale.body().path("conflicts").size()).isEqualTo(1);
         assertThat(stale.body().path("conflicts").get(0).path("serverCard").path("version").asLong())
-                .isEqualTo(1);
+                .isEqualTo(2);
     }
 
     @Test
