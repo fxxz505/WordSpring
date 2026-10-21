@@ -34,6 +34,11 @@ interface ContentRepository {
     suspend fun getWord(wordId: Long): Word?
     fun observeWord(wordId: Long): Flow<Word?>
     suspend fun getDefinitions(wordId: Long): List<Definition>
+    /**
+     * Random meanings of other words in the same book as [bookEntryId], for multiple-choice
+     * distractors. Pass [partOfSpeech] to restrict to one part of speech.
+     */
+    suspend fun getChoiceDistractors(bookEntryId: Long, excludeWordId: Long, partOfSpeech: String?, limit: Int): List<Definition>
     fun observeDefinitions(wordId: Long): Flow<List<Definition>>
 
     suspend fun getOrCreateReviewCard(bookEntryId: Long, now: Long): ReviewCard

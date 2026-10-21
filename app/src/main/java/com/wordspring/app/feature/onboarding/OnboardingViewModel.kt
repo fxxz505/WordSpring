@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.wordspring.app.data.prefs.SettingsRepository
 import com.wordspring.app.data.repository.ContentRepository
 import com.wordspring.app.data.seed.StarterBookImporter
+import com.wordspring.app.domain.model.BookSourceType
 import com.wordspring.app.domain.model.WordBook
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,8 @@ data class OnboardingUiState(
     val step: OnboardingStep = OnboardingStep.GOAL,
     val selectedGoal: OnboardingGoal = OnboardingGoal.DAILY,
     val books: List<WordBook> = emptyList(),
+    /** Word count per book id, shown next to each option. */
+    val wordCounts: Map<Long, Int> = emptyMap(),
     val selectedBookId: Long? = null,
     val dailyNewLimit: Int = 10,
     val customDailyInput: String = "10",
@@ -44,12 +47,17 @@ class OnboardingViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 starterBookImporter.ensureStarterBook()
-                val books = contentRepository.getEnabledBooks()
-                val firstBookId = books.firstOrNull()?.id
+                // Offer every built-in book, not only the one enabled by default.
+                val books = contentRepository.observeBooks().first()
+                    .filter { it.sourceType == BookSourceType.BUILT_IN }
+                val counts = contentRepository.getBookLearningProgress()
+                    .associate { it.bookId to it.totalCount }
+                val preselected = books.firstOrNull { it.isEnabled }?.id ?: books.firstOrNull()?.id
                 _state.value = _state.value.copy(
                     isLoading = false,
                     books = books,
-                    selectedBookId = firstBookId
+                    wordCounts = counts,
+                    selectedBookId = _state.value.selectedBookId ?: preselected
                 )
             } catch (t: Throwable) {
                 _state.value = _state.value.copy(isLoading = false, errorMessage = "初始化失败，请重试")
@@ -102,9 +110,17 @@ class OnboardingViewModel @Inject constructor(
         viewModelScope.launch {
             val limit = current.customDailyInput.toIntOrNull()?.coerceIn(1, 100) ?: 10
             settingsRepository.setDailyNewLimit(limit)
+            current.selectedBookId?.let { chosen ->
+                // Study exactly the chosen book: enable it and switch off the other built-in books.
+                current.books.forEach { book ->
+                    val shouldEnable = book.id == chosen
+                    if (book.isEnabled != shouldEnable) contentRepository.setBookEnabled(book.id, shouldEnable)
+                }
+                contentRepository.setBookEnabled(chosen, true)
+                contentRepository.setBookDailyLimit(chosen, limit)
+            }
+            // Mark onboarded last so Home never loads before the book choice is saved.
             settingsRepository.setOnboarded(true)
-            // Mark the chosen book enabled (default starter already enabled by importer)
-            current.selectedBookId?.let { contentRepository.setBookEnabled(it, true) }
         }
     }
 }

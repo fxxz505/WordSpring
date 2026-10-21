@@ -22,7 +22,8 @@ data class Word(
     val normalizedSpelling: String,
     val phonetic: String?,
     val sourceLanguage: String,
-    val targetLanguage: String
+    val targetLanguage: String,
+    val forms: String? = null
 )
 
 @Serializable

@@ -59,6 +59,7 @@ fun OnboardingScreen(
                 )
                 OnboardingStep.BOOK -> BookStep(
                     books = state.books,
+                    wordCounts = state.wordCounts,
                     selectedBookId = state.selectedBookId,
                     onSelect = viewModel::selectBook
                 )
@@ -119,6 +120,7 @@ private fun GoalOption(title: String, subtitle: String, selected: Boolean, onCli
 @Composable
 private fun BookStep(
     books: List<com.wordspring.app.domain.model.WordBook>,
+    wordCounts: Map<Long, Int>,
     selectedBookId: Long?,
     onSelect: (Long) -> Unit
 ) {
@@ -141,7 +143,12 @@ private fun BookStep(
         ) {
             Column(Modifier.padding(16.dp)) {
                 Text(book.name, style = MaterialTheme.typography.titleMedium)
-                Text("每日新词 ${book.dailyNewLimit} · 授权：${book.license}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                val count = wordCounts[book.id]
+                Text(
+                    listOfNotNull(count?.let { "$it 词" }, "推荐每日 ${book.dailyNewLimit} 个新词").joinToString(" · "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

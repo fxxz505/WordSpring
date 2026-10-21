@@ -1,0 +1,14 @@
+{
+  "id": "zhongkao",
+  "name": "中考英语词汇",
+  "description": "初中毕业与中考考纲词汇",
+  "sourceType": "BUILT_IN",
+  "dailyNewLimit": 10,
+  "license": "MIT License - ECDICT (Copyright (c) 2025 Linwei; see LICENSE.txt)",
+  "version": "3.0.0",
+  "updatedAt": "2026-09-27",
+  "source": "ECDICT entries tagged 'zk', ordered by word frequency",
+  "wordCount": 1603,
+  "sourceLanguage": "en",
+  "targetLanguage": "zh-CN"
+}

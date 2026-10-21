@@ -21,7 +21,7 @@ import android.content.Context
         ImportJobEntity::class,
         StudySessionEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class WordSpringDatabase : RoomDatabase() {

@@ -53,6 +53,8 @@ interface WordDao {
     """)
     suspend fun searchByDefinitionKeyword(keyword: String, limit: Int): List<WordEntity>
     @Query("SELECT COUNT(*) FROM words") suspend fun count(): Int
+    @Query("UPDATE words SET phonetic = :phonetic, forms = :forms WHERE id = :id")
+    suspend fun updatePhoneticAndForms(id: Long, phonetic: String?, forms: String?)
 }
 
 @Dao
@@ -63,6 +65,32 @@ interface DefinitionDao {
     suspend fun getByWord(wordId: Long): List<DefinitionEntity>
     @Query("SELECT * FROM definitions WHERE wordId = :wordId ORDER BY id ASC")
     fun observeByWord(wordId: Long): Flow<List<DefinitionEntity>>
+    @Query("SELECT * FROM definitions WHERE wordId IN (:wordIds) ORDER BY id ASC")
+    suspend fun getByWordIds(wordIds: List<Long>): List<DefinitionEntity>
+    @Query("DELETE FROM definitions WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Long>)
+    @Query("SELECT COUNT(*) FROM definitions WHERE wordId = :wordId AND meaningZh = :meaningZh")
+    suspend fun countSameMeaning(wordId: Long, meaningZh: String): Int
+
+    /**
+     * Random meanings of *other* words from the same book, used as multiple-choice distractors.
+     * Pass [partOfSpeech] to prefer distractors of the same part of speech (harder, fairer options).
+     */
+    @Query("""
+        SELECT d.* FROM definitions d
+        INNER JOIN book_entries be ON be.wordId = d.wordId
+        WHERE be.bookId = (SELECT bookId FROM book_entries WHERE id = :bookEntryId)
+          AND d.wordId != :excludeWordId
+          AND (:partOfSpeech IS NULL OR d.partOfSpeech = :partOfSpeech)
+        ORDER BY RANDOM()
+        LIMIT :limit
+    """)
+    suspend fun getRandomDistractors(
+        bookEntryId: Long,
+        excludeWordId: Long,
+        partOfSpeech: String?,
+        limit: Int
+    ): List<DefinitionEntity>
 }
 
 @Dao
@@ -77,6 +105,9 @@ interface BookEntryDao {
     @Query("SELECT COUNT(*) FROM book_entries WHERE bookId = :bookId") suspend fun countInBook(bookId: Long): Int
     @Query("SELECT COUNT(*) FROM book_entries WHERE bookId = :bookId") fun observeCountInBook(bookId: Long): Flow<Int>
     @Query("DELETE FROM book_entries WHERE bookId = :bookId") suspend fun deleteByBook(bookId: Long)
+    @Query("DELETE FROM book_entries WHERE id IN (:ids)") suspend fun deleteByIds(ids: List<Long>)
+    @Query("UPDATE book_entries SET position = :position WHERE id = :id")
+    suspend fun updatePosition(id: Long, position: Int)
     @Query("DELETE FROM book_entries") suspend fun deleteAll()
 }
 
@@ -168,6 +199,14 @@ interface ReviewCardDao {
     @Query("DELETE FROM review_cards") suspend fun deleteAll()
     @Query("DELETE FROM review_cards WHERE bookEntryId IN (SELECT id FROM book_entries WHERE bookId = :bookId)")
     suspend fun deleteByBook(bookId: Long)
+    @Query("DELETE FROM review_cards WHERE bookEntryId IN (:bookEntryIds)")
+    suspend fun deleteByBookEntryIds(bookEntryIds: List<Long>)
+    @Query("""
+        SELECT rc.* FROM review_cards rc
+        INNER JOIN book_entries be ON be.id = rc.bookEntryId
+        WHERE be.bookId = :bookId
+    """)
+    suspend fun getByBook(bookId: Long): List<ReviewCardEntity>
 }
 
 data class BookLearningProgressRow(
@@ -242,6 +281,8 @@ interface ReviewEventDao {
     suspend fun countCorrectSince(since: Long): Int
     @Query("SELECT * FROM review_events ORDER BY answeredAt DESC")
     suspend fun getAll(): List<ReviewEventEntity>
+    @Query("UPDATE review_events SET cardId = :newCardId WHERE cardId = :oldCardId")
+    suspend fun reassignCard(oldCardId: Long, newCardId: Long)
     @Query("DELETE FROM review_events") suspend fun deleteAll()
 }
 

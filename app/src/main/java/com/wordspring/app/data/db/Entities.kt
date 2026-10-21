@@ -32,7 +32,9 @@ data class WordEntity(
     val normalizedSpelling: String,
     val phonetic: String?,
     val sourceLanguage: String,
-    val targetLanguage: String
+    val targetLanguage: String,
+    /** Inflected forms in ECDICT exchange style, e.g. "p:ran/d:run/i:running/3:runs". */
+    val forms: String? = null
 )
 
 @Entity(
@@ -45,8 +47,14 @@ data class DefinitionEntity(
     val partOfSpeech: String?,
     val meaningZh: String,
     val example: String?,
-    val translation: String?
+    val translation: String?,
+    /** [DefinitionSource.BUILT_IN] for rows owned by the built-in word books; null for user data. */
+    val source: String? = null
 )
+
+object DefinitionSource {
+    const val BUILT_IN = "BUILT_IN"
+}
 
 @Entity(
     tableName = "book_entries",

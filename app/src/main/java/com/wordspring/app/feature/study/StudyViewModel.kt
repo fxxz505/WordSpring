@@ -1,4 +1,4 @@
-﻿package com.wordspring.app.feature.study
+package com.wordspring.app.feature.study
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -34,9 +34,9 @@ import javax.inject.Inject
 /** Card finite-state machine per spec. */
 enum class CardState {
     QUESTION,        // showing prompt; awaiting user action
-    ANSWER_REVEALED, // RECALL only 鈥?answer shown, awaiting self-grade
+    ANSWER_REVEALED, // RECALL only: answer shown, awaiting self-grade
     SUBMITTING,      // commit in flight, original content preserved
-    FEEDBACK,        // correct answer + grade shown; "缁х画" available
+    FEEDBACK,        // SPELLING/CHOICE: correct answer + result shown; "继续" available
     COMPLETE,        // transitioning to next card or summary
     ERROR            // load or save failed; retry available
 }
@@ -51,6 +51,10 @@ data class CardUi(
     val card: ReviewCard?
 ) {
     val primaryDefinition: Definition? get() = definitions.firstOrNull()
+    /** Meanings grouped by part of speech, de-duplicated, for the card back. */
+    val senses: List<SenseLine> by lazy { senseLines(definitions) }
+    /** Inflected forms (past tense, plural, ...) parsed from the word. */
+    val forms: List<WordFormItem> by lazy { parseWordForms(word?.forms) }
 }
 
 sealed interface StudyUiState {
@@ -76,7 +80,11 @@ sealed interface StudyUiState {
         val advancedGrading: Boolean = false,
         // Cards answered AGAIN/HARD in the current round; appended as a new
         // round when the current queue ends so the user re-answers them.
-        val wrongCards: List<SessionCardRef> = emptyList()
+        val wrongCards: List<SessionCardRef> = emptyList(),
+        /** When the card was shown; used to record answer duration. */
+        val shownAt: Long = 0L,
+        /** Saved-state to move to after the user leaves FEEDBACK. */
+        val pendingSession: StudySession? = null
     ) : StudyUiState
     data class Completed(val session: StudySession) : StudyUiState
     data class Failed(val message: String) : StudyUiState
@@ -139,7 +147,7 @@ class StudyViewModel @Inject constructor(
         val definitions = contentRepository.getDefinitions(ref.wordId)
         val card = contentRepository.getOrCreateReviewCard(ref.bookEntryId, TimeUtil.nowMillis())
         val options = if (ref.questionType == QuestionType.CHOICE) {
-            buildChoiceOptions(definitions)
+            loadChoiceOptions(ref.bookEntryId, ref.wordId, definitions)
         } else emptyList()
         val progress = studyGroupProgress(session.completedCount, session.queueSnapshot)
         val total = progress.total
@@ -154,29 +162,27 @@ class StudyViewModel @Inject constructor(
             cardState = CardState.QUESTION,
             ttsAvailable = ttsAvailable,
             choiceOptions = options,
-            advancedGrading = advanced
+            advancedGrading = advanced,
+            shownAt = TimeUtil.nowMillis()
         )
     }
 
-    private fun buildChoiceOptions(correctDefinitions: List<Definition>): List<ChoiceOption> {
-        val correct = correctDefinitions.firstOrNull() ?: return emptyList()
-        // We need 3 distractors. Pull from the same book 鈥?but we don't have them in scope here
-        // without an extra query. v1: reuse other definitions of the same word as distractors;
-        // if not enough, repeat the correct option text in a shuffled form so the user still
-        // has a meaningful 4-way choice. This is intentionally simple.
-        val distractors = correctDefinitions.drop(1).take(3).map { ChoiceOption(it.meaningZh, false, it) }
-        val correctOption = ChoiceOption(correct.meaningZh, true, correct)
-        val combined = (distractors + correctOption).shuffled()
-        // Ensure we always return 4 options. If we have fewer distractors, pad with variants
-        // of the correct option to keep the layout consistent.
-        if (combined.size < 4) {
-            val padded = combined.toMutableList()
-            while (padded.size < 4) {
-                padded.add(ChoiceOption("No distractor", false, null))
-            }
-            return padded
-        }
-        return combined
+    /**
+     * Real multiple choice: distractors are meanings of other words in the same book, preferring
+     * the same part of speech so the answer can't be guessed from "n." vs "vt.".
+     */
+    private suspend fun loadChoiceOptions(
+        bookEntryId: Long,
+        wordId: Long,
+        definitions: List<Definition>
+    ): List<ChoiceOption> {
+        if (definitions.isEmpty()) return emptyList()
+        val pos = definitions.first().partOfSpeech
+        val samePos = if (pos != null) {
+            contentRepository.getChoiceDistractors(bookEntryId, wordId, pos, DISTRACTOR_POOL)
+        } else emptyList()
+        val any = contentRepository.getChoiceDistractors(bookEntryId, wordId, null, DISTRACTOR_POOL)
+        return buildChoiceOptions(definitions, samePos + any)
     }
 
     // ---- User actions (intent-style) ----
@@ -191,7 +197,7 @@ class StudyViewModel @Inject constructor(
     /** RECALL self-grade or any flow that produces a Grade directly. */
     fun selfGrade(grade: Grade) {
         val current = _state.value as? StudyUiState.Active ?: return
-        if (current.cardState != CardState.ANSWER_REVEALED && current.cardState != CardState.FEEDBACK) return
+        if (current.cardState != CardState.ANSWER_REVEALED) return
         submitGrade(grade, current)
     }
 
@@ -202,11 +208,9 @@ class StudyViewModel @Inject constructor(
         val word = current.card.word ?: return
         val result = AnswerChecker.checkSpelling(current.spellingUserInput, word.spelling)
         val grade = AnswerChecker.gradeFromSpelling(result)
-        _state.value = current.copy(
-            spellingResult = result,
-            cardState = CardState.SUBMITTING
-        )
-        submitGrade(grade, current, spellingResultOverride = result)
+        val submitting = current.copy(spellingResult = result, cardState = CardState.SUBMITTING)
+        _state.value = submitting
+        submitGrade(grade, submitting, spellingResultOverride = result)
     }
 
     fun updateSpellingInput(value: String) {
@@ -222,11 +226,9 @@ class StudyViewModel @Inject constructor(
         if (index !in options.indices) return
         val selected = options[index]
         val grade = AnswerChecker.gradeFromChoice(selected.isCorrect)
-        _state.value = current.copy(
-            choiceSelectedIndex = index,
-            cardState = CardState.SUBMITTING
-        )
-        submitGrade(grade, current)
+        val submitting = current.copy(choiceSelectedIndex = index, cardState = CardState.SUBMITTING)
+        _state.value = submitting
+        submitGrade(grade, submitting)
     }
 
     fun pronounceCurrentWord() {
@@ -246,10 +248,15 @@ class StudyViewModel @Inject constructor(
         super.onCleared()
     }
 
-    /** FEEDBACK 鈫?next card. */
+    /** FEEDBACK -> next card. */
     fun continueToNext() {
         val current = _state.value as? StudyUiState.Active ?: return
         if (current.cardState != CardState.FEEDBACK && current.cardState != CardState.ERROR) return
+        current.pendingSession?.let { saved ->
+            _state.value = current.copy(cardState = CardState.COMPLETE)
+            viewModelScope.launch { moveTo(saved, current.wrongCards) }
+            return
+        }
         val nextIndex = current.index + 1
         if (nextIndex >= current.session.queueSnapshot.size) {
             // Reached the end of the current queue. If there are pending wrong
@@ -281,7 +288,15 @@ class StudyViewModel @Inject constructor(
 
     fun retry() {
         val current = _state.value as? StudyUiState.Active ?: return
-        _state.value = current.copy(cardState = CardState.QUESTION, errorMessage = null)
+        if (current.cardState != CardState.ERROR) return
+        // A recall card was already revealed; let the user grade it again directly.
+        val back = if (current.card.questionType == QuestionType.RECALL) CardState.ANSWER_REVEALED else CardState.QUESTION
+        _state.value = current.copy(
+            cardState = back,
+            errorMessage = null,
+            choiceSelectedIndex = null,
+            spellingResult = null
+        )
     }
 
     private fun submitGrade(
@@ -291,7 +306,7 @@ class StudyViewModel @Inject constructor(
     ) {
         _state.value = current.copy(cardState = CardState.SUBMITTING, showSaving = false)
         viewModelScope.launch {
-            // Spec: show "姝ｅ湪淇濆瓨" only if save takes > 500ms
+            // Spec: show "正在保存" only if save takes > 500ms
             val savingShown = async {
                 delay(500)
                 val s = _state.value as? StudyUiState.Active
@@ -299,25 +314,24 @@ class StudyViewModel @Inject constructor(
                     _state.value = s.copy(showSaving = true)
                 }
             }
-            val started = TimeUtil.nowMillis()
+            val now = TimeUtil.nowMillis()
+            val durationMs = if (current.shownAt > 0L) (now - current.shownAt).coerceIn(0L, MAX_DURATION_MS) else 0L
             val result = submitAnswerUseCase(
                 cardId = current.card.cardId,
                 bookEntryId = current.card.bookEntryId,
                 grade = grade,
                 questionType = current.card.questionType,
-                durationMs = 0L,
+                durationMs = durationMs,
                 sessionId = current.session.id,
                 now = TimeUtil.nowMillis()
             )
             savingShown.cancel()
-            val elapsed = TimeUtil.nowMillis() - started
-            val isCorrect = grade != Grade.AGAIN
-            val newAgainStreak = if (grade == Grade.AGAIN) current.againStreak + 1 else 0
+            val isCorrect = grade == Grade.GOOD || grade == Grade.EASY
 
             when (result) {
                 is com.wordspring.app.data.repository.AnswerResult.AlreadyCommitted -> {
                     val updatedSession = sessionRepository.getSession(current.session.id) ?: current.session
-                    advanceAfterSaved(current, updatedSession, current.wrongCards)
+                    advanceAfterSaved(current, updatedSession, current.wrongCards, isCorrect, spellingResultOverride)
                 }
                 is com.wordspring.app.data.repository.AnswerResult.Committed -> {
                     settingsRepository.recordReviewDay(TimeUtil.todayLocalDate())
@@ -340,7 +354,7 @@ class StudyViewModel @Inject constructor(
 
                     // If we just answered the last card of the current queue and
                     // there are pending wrong cards, append them as a new round so
-                    // the user must re-answer them correctly. (涓嶈儗鍗曡瘝 style)
+                    // the user must re-answer them correctly (不背单词 style).
                     // Reset wrongCards for the new round.
                     val (finalSession, finalWrongCards) = if (
                         updatedSession.currentIndex >= updatedSession.queueSnapshot.size &&
@@ -355,7 +369,7 @@ class StudyViewModel @Inject constructor(
                         updatedSession to newWrongCards
                     }
 
-                    advanceAfterSaved(current, finalSession, finalWrongCards)
+                    advanceAfterSaved(current, finalSession, finalWrongCards, isCorrect, spellingResultOverride)
                 }
                 is com.wordspring.app.data.repository.AnswerResult.Failed -> {
                     // Spec: keep card & user input; prompt retry. Don't switch to next card.
@@ -372,14 +386,36 @@ class StudyViewModel @Inject constructor(
         }
     }
 
+    /**
+     * RECALL cards advance right after the swipe animation. SPELLING/CHOICE stay on a FEEDBACK
+     * screen showing the right answer until the user taps "继续", so mistakes are actually seen.
+     */
     private suspend fun advanceAfterSaved(
         current: StudyUiState.Active,
         updatedSession: StudySession,
-        wrongCards: List<SessionCardRef>
+        wrongCards: List<SessionCardRef>,
+        isCorrect: Boolean,
+        spellingResult: AnswerChecker.SpellingResult?
     ) {
-        delay(120)
+        if (current.card.questionType == QuestionType.RECALL) {
+            delay(RECALL_ADVANCE_DELAY_MS)
+            moveTo(updatedSession, wrongCards)
+            return
+        }
+        val latest = _state.value as? StudyUiState.Active ?: current
+        _state.value = latest.copy(
+            cardState = CardState.FEEDBACK,
+            lastIsCorrect = isCorrect,
+            showSaving = false,
+            spellingResult = spellingResult ?: latest.spellingResult,
+            wrongCards = wrongCards,
+            pendingSession = updatedSession
+        )
+    }
+
+    private suspend fun moveTo(updatedSession: StudySession, wrongCards: List<SessionCardRef>) {
         if (updatedSession.currentIndex >= updatedSession.queueSnapshot.size) {
-            sessionRepository.completeSession(current.session.id, TimeUtil.nowMillis())
+            sessionRepository.completeSession(updatedSession.id, TimeUtil.nowMillis())
             _state.value = StudyUiState.Completed(updatedSession)
         } else {
             _state.value = buildActive(
@@ -396,5 +432,11 @@ class StudyViewModel @Inject constructor(
             sessionRepository.abandonSession(sessionId, TimeUtil.nowMillis())
         }
     }
-}
 
+    private companion object {
+        const val DISTRACTOR_POOL = 12
+        const val RECALL_ADVANCE_DELAY_MS = 120L
+        /** Cap so a card left open in the background doesn't skew stats. */
+        const val MAX_DURATION_MS = 5 * 60_000L
+    }
+}

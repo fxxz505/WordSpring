@@ -89,7 +89,9 @@ class CsvImporter @Inject constructor(
                     targetLanguage = StudyDirection.TARGET_LANGUAGE
                 )
             )
-            if (dto.definition.isNotBlank()) {
+            if (dto.definition.isNotBlank() &&
+                definitionDao.countSameMeaning(wordId, dto.definition.trim()) == 0
+            ) {
                 definitionDao.insert(
                     DefinitionEntity(
                         id = 0L,

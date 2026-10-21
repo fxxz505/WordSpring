@@ -27,7 +27,10 @@ data class BookWordRow(
     val word: Word?,
     val definitions: List<Definition>
 ) {
-    val primaryMeaning: String? get() = definitions.firstOrNull()?.meaningZh
+    val primaryMeaning: String?
+        get() = definitions.take(2).joinToString("  ") { def ->
+            listOfNotNull(def.partOfSpeech, def.meaningZh).joinToString(" ")
+        }.ifBlank { null }
 }
 
 data class BookDetailUiState(

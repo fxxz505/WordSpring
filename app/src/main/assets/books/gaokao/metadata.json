@@ -1,0 +1,14 @@
+{
+  "id": "gaokao",
+  "name": "高考英语词汇",
+  "description": "普通高中课程标准与高考考纲词汇",
+  "sourceType": "BUILT_IN",
+  "dailyNewLimit": 15,
+  "license": "MIT License - ECDICT (Copyright (c) 2025 Linwei; see LICENSE.txt)",
+  "version": "3.0.0",
+  "updatedAt": "2026-09-27",
+  "source": "ECDICT entries tagged 'gk', ordered by word frequency",
+  "wordCount": 3677,
+  "sourceLanguage": "en",
+  "targetLanguage": "zh-CN"
+}

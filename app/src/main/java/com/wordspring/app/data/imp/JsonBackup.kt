@@ -84,12 +84,17 @@ class JsonBackup @Inject constructor(
                 val w = wordDao.getById(e.wordId) ?: continue
                 val defs = definitionDao.getByWord(e.wordId)
                 val def = defs.firstOrNull()
+                // Built-in words keep one row per part of speech; export all of them.
+                val definitionText = if (defs.size <= 1) def?.meaningZh ?: ""
+                else defs.joinToString("\n") { d ->
+                    listOfNotNull(d.partOfSpeech, d.meaningZh).joinToString(" ")
+                }
                 entriesDto += EntryDto(
                     bookName = b.name,
                     word = w.spelling,
                     phonetic = w.phonetic,
-                    partOfSpeech = def?.partOfSpeech,
-                    definition = def?.meaningZh ?: "",
+                    partOfSpeech = if (defs.size <= 1) def?.partOfSpeech else null,
+                    definition = definitionText,
                     example = def?.example,
                     translation = def?.translation
                 )
@@ -169,7 +174,9 @@ class JsonBackup @Inject constructor(
                 )
                 if (newId > 0) newId else wordDao.getByNormalized(normalized)?.id ?: continue
             }
-            if (entry.definition.isNotBlank()) {
+            if (entry.definition.isNotBlank() &&
+                definitionDao.countSameMeaning(wordId, entry.definition.trim()) == 0
+            ) {
                 definitionDao.insert(
                     DefinitionEntity(
                         id = 0L,

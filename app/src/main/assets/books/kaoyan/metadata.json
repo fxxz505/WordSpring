@@ -1,0 +1,14 @@
+{
+  "id": "kaoyan",
+  "name": "考研英语词汇",
+  "description": "全国硕士研究生入学考试英语大纲词汇",
+  "sourceType": "BUILT_IN",
+  "dailyNewLimit": 20,
+  "license": "MIT License - ECDICT (Copyright (c) 2025 Linwei; see LICENSE.txt)",
+  "version": "3.0.0",
+  "updatedAt": "2026-09-27",
+  "source": "ECDICT entries tagged 'ky', ordered by word frequency",
+  "wordCount": 4801,
+  "sourceLanguage": "en",
+  "targetLanguage": "zh-CN"
+}

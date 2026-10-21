@@ -122,6 +122,13 @@ class ContentRepositoryImpl @Inject constructor(
 
     override suspend fun getDefinitions(wordId: Long): List<Definition> =
         definitionDao.getByWord(wordId).map { it.toDomain() }
+    override suspend fun getChoiceDistractors(
+        bookEntryId: Long,
+        excludeWordId: Long,
+        partOfSpeech: String?,
+        limit: Int
+    ): List<Definition> =
+        definitionDao.getRandomDistractors(bookEntryId, excludeWordId, partOfSpeech, limit).map { it.toDomain() }
     override fun observeDefinitions(wordId: Long): Flow<List<Definition>> =
         definitionDao.observeByWord(wordId).map { list -> list.map { it.toDomain() } }
 

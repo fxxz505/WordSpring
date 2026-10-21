@@ -58,7 +58,8 @@ object Mappers {
         normalizedSpelling = normalizedSpelling,
         phonetic = phonetic,
         sourceLanguage = sourceLanguage,
-        targetLanguage = targetLanguage
+        targetLanguage = targetLanguage,
+        forms = forms
     )
 
     fun DefinitionEntity.toDomain(): Definition = Definition(

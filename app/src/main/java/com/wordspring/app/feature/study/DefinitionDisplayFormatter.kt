@@ -34,6 +34,7 @@ object DefinitionDisplayFormatter {
         val primaryMeaning = lines.firstOrNull()
             ?.replaceFirst(inlinePartOfSpeech, "")
             ?.substringBefore('、')
+            ?.substringBefore('；')
             ?.trim()
             .orEmpty()
 
